@@ -8,3 +8,4 @@ seaborn
 joblib
 groq
 python-dotenv
+openpyxl
