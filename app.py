@@ -382,6 +382,7 @@ if uploaded_file is not None:
         st.session_state.last_file_key = file_key
         st.session_state.data_preprocessed = False
         st.session_state.insights_generated = False
+        st.session_state.show_eda = False
         if "hvac_model" in st.session_state:
             del st.session_state.hvac_model
 
@@ -432,10 +433,14 @@ if uploaded_file is not None:
             st.markdown('<div class="eda-btn-container">', unsafe_allow_html=True)
             run_eda = st.button("📈 EDA", 
                                key=f"eda_btn_{st.session_state.reset_counter}",
-                               use_container_width=True)
+                               use_container_width=True,
+                               type="primary")
             st.markdown('</div>', unsafe_allow_html=True)
         
         if run_eda:
+            st.session_state.show_eda = not st.session_state.get("show_eda", False)
+            
+        if st.session_state.get("show_eda", False):
             with st.expander("📊 Exploratory Data Analysis", expanded=True):
                 perform_hvac_eda(df)
 
@@ -448,7 +453,8 @@ if uploaded_file is not None:
             st.markdown('<div class="preprocess-btn-container">', unsafe_allow_html=True)
             start_pp = st.button("🛠️ Start Preprocessing",
                                  key=f"preprocess_btn_{st.session_state.reset_counter}",
-                                 use_container_width=True)
+                                 use_container_width=True,
+                                 type="primary")
             st.markdown('</div>', unsafe_allow_html=True)
         
         if start_pp:
@@ -504,7 +510,8 @@ if uploaded_file is not None:
                 st.markdown('<div class="ai-btn-container">', unsafe_allow_html=True)
                 gen_ai = st.button("✨ Generate AI Analysis",
                                    key=f"ai_btn_{st.session_state.reset_counter}",
-                                   use_container_width=True)
+                                   use_container_width=True,
+                                   type="primary")
                 st.markdown('</div>', unsafe_allow_html=True)
 
             if gen_ai:
@@ -534,56 +541,57 @@ if uploaded_file is not None:
             with sm_col2:
                 hvac_model_choice = st.selectbox(
                     label = "Model Selection",
-                    options = ["LSTM"],
+                    options = ["Select Model", "LSTM"],
                     label_visibility = "collapsed",
                     key = f"hvac_model_{st.session_state.reset_counter}"
                 )
 
-            st.markdown("<br>", unsafe_allow_html=True)
-            tr_col1, tr_col2 = st.columns([1, 2])
-            with tr_col1:
-                st.markdown(
-                    "<div style='margin-top:6px; font-weight:600; font-size:1.1rem; color:#1A237E;'>"
-                    "Train Model</div>", 
-                    unsafe_allow_html=True
-                )
-            with tr_col2:
-                st.markdown('<div class="train-btn-container">', unsafe_allow_html=True)
-                train_clicked = st.button("Train Model",
-                                         key=f"train_btn_{st.session_state.reset_counter}",
-                                         use_container_width=True)
+            if hvac_model_choice == "LSTM":
+                st.markdown("<br>", unsafe_allow_html=True)
+                tr_col1, tr_col2 = st.columns([1, 2])
+                with tr_col1:
+                    st.markdown(
+                        "<div style='margin-top:6px; font-weight:600; font-size:1.1rem; color:#1A237E;'>"
+                        "Train Model</div>", 
+                        unsafe_allow_html=True
+                    )
+                with tr_col2:
+                    st.markdown('<div class="train-btn-container">', unsafe_allow_html=True)
+                    train_clicked = st.button("Train Model",
+                                             key=f"train_btn_{st.session_state.reset_counter}",
+                                             use_container_width=True,
+                                             type="primary")
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+                if train_clicked:
+                    # Ensure DateTime column is sorted
+                    if 'DateTime' in df.columns:
+                        df['DateTime'] = pd.to_datetime(df['DateTime'])
+                        df = df.sort_values('DateTime').reset_index(drop=True)
+
+                    with st.spinner("⏳ Training LSTM model..."):
+                        result = train_selected_model(df)
+                        
+                        if 'error' in result and result['error']:
+                            st.error(f"❌ {result['error']}")
+                        else:
+                            st.session_state.hvac_model       = result['model']
+                            st.session_state.hvac_feat_scaler = result['feat_scaler']
+                            st.session_state.hvac_pmv_scaler  = result['pmv_scaler']
+                            st.session_state.hvac_type        = result['type']
+                            st.session_state.model_trained    = True
+                            st.session_state.model_mae        = result['mae_test']
+                            
+                            # Store real last 12 readings
+                            X_raw = df[HVAC_FEATURES].values
+                            st.session_state.last_12_raw = X_raw[-WINDOW:] if len(X_raw) >= WINDOW else X_raw
+                            
+                            st.success("✅ LSTM model trained successfully!")
+                            m1, m2, m3 = st.columns(3)
+                            m1.metric(label="MAE (Lower = Better)", value=f"{result['mae_test']:.4f}")
+                            m2.metric(label="RMSE (Lower = Better)", value=f"{result['rmse_test']:.4f}")
+                            m3.metric(label="R² Score (Higher = Better)", value=f"{result['r2_test']:.4f}")
                 st.markdown('</div>', unsafe_allow_html=True)
-
-            if train_clicked:
-
-                # Ensure DateTime column is sorted
-                if 'DateTime' in df.columns:
-                    df['DateTime'] = pd.to_datetime(df['DateTime'])
-                    df = df.sort_values('DateTime').reset_index(drop=True)
-
-                with st.spinner("⏳ Training LSTM model..."):
-                    result = train_selected_model(df)
-                    
-                    if 'error' in result and result['error']:
-                        st.error(f"❌ {result['error']}")
-                    else:
-                        st.session_state.hvac_model       = result['model']
-                        st.session_state.hvac_feat_scaler = result['feat_scaler']
-                        st.session_state.hvac_pmv_scaler  = result['pmv_scaler']
-                        st.session_state.hvac_type        = result['type']
-                        st.session_state.model_trained    = True
-                        st.session_state.model_mae        = result['mae_test']
-                        
-                        # Store real last 12 readings
-                        X_raw = df[HVAC_FEATURES].values
-                        st.session_state.last_12_raw = X_raw[-WINDOW:] if len(X_raw) >= WINDOW else X_raw
-                        
-                        st.success("✅ LSTM model trained successfully!")
-                        m1, m2, m3 = st.columns(3)
-                        m1.metric(label="MAE (Lower = Better)", value=f"{result['mae_test']:.4f}")
-                        m2.metric(label="RMSE (Lower = Better)", value=f"{result['rmse_test']:.4f}")
-                        m3.metric(label="R² Score (Higher = Better)", value=f"{result['r2_test']:.4f}")
-            st.markdown('</div>', unsafe_allow_html=True)
 
         # ── TEST DATA EVALUATION ─────────────────────────────────────
         if st.session_state.get("model_trained", False):
