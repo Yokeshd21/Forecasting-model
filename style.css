@@ -109,14 +109,14 @@ h3 {
 /* Higher specificity using data-testid and stAppViewMainArea */
 [data-testid="stAppViewMainArea"] button[data-testid="stBaseButton-primary"],
 [data-testid="stAppViewMainArea"] .stButton>button[kind="primary"] {
-    background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%) !important;
+    background: linear-gradient(135deg, #66BB6A 0%, #43A047 100%) !important;
     color: white !important;
     font-weight: 700 !important;
     border: none !important;
     border-radius: 12px !important;
     padding: 10px 24px !important;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-    box-shadow: 0 4px 15px rgba(27, 94, 32, 0.3) !important;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3) !important;
     text-transform: uppercase !important;
     letter-spacing: 0.8px !important;
     opacity: 1 !important;
@@ -126,8 +126,8 @@ h3 {
 [data-testid="stAppViewMainArea"] button[data-testid="stBaseButton-primary"]:hover,
 [data-testid="stAppViewMainArea"] .stButton>button[kind="primary"]:hover {
     transform: translateY(-4px) scale(1.03) !important;
-    background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%) !important;
-    box-shadow: 0 10px 30px rgba(27, 94, 32, 0.5) !important;
+    background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%) !important;
+    box-shadow: 0 10px 30px rgba(76, 175, 80, 0.5) !important;
     color: white !important;
 }
 
