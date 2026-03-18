@@ -45,9 +45,8 @@ PATIENCE    = 15      # early stopping patience
 SAVE_DIR = 'saved_models'
 os.makedirs(SAVE_DIR, exist_ok=True)
 
-# ================================================================
 # THERMAL COMFORT LOGIC (ISO 7730 / Fanger PMV)
-# ================================================================
+
 
 def calculate_fanger_pmv(ta, tr, vel, rh, met=1.2, clo=0.6):
     """
@@ -86,9 +85,7 @@ def estimate_pmv_from_sensors(row):
 # Physics constraints are now primarily handled via validation logic in app.py
 
 
-# ================================================================
 # HELPER FUNCTIONS
-# ================================================================
 
 def make_windows(X, y, win=WINDOW):
     """Slide a window of `win` rows along the data."""
@@ -192,9 +189,9 @@ def check_physics_violations(X_test_raw, preds_raw, cooling_idx=0):
     return len(violations)
 
 
-# ================================================================
+
 # MODEL BUILDERS
-# ================================================================
+
 
 def build_lstm_model(input_shape):
     """Standard LSTM with functional API."""
@@ -217,9 +214,8 @@ def build_lstm_model(input_shape):
 
 
 
-# ================================================================
 # TRAINING FUNCTIONS
-# ================================================================
+
 
 def train_lstm(X_train, y_train, X_test, y_test):
     """Train LSTM model."""
@@ -239,9 +235,8 @@ def train_lstm(X_train, y_train, X_test, y_test):
 
 
 
-# ================================================================
 # PREDICTION FUNCTIONS
-# ================================================================
+
 
 def predict_lstm(model, X_window, feat_scaler, pmv_scaler, last_12_raw, new_input_raw):
     """
@@ -279,9 +274,8 @@ def predict_lstm(model, X_window, feat_scaler, pmv_scaler, last_12_raw, new_inpu
 
 
 
-# ================================================================
 # SAVE/LOAD UTILITIES
-# ================================================================
+
 
 def save_model_bundle(model, feat_scaler, pmv_scaler, model_type="LSTM", save_dir=SAVE_DIR):
     """Save model and scalers to disk."""
